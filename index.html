@@ -110,6 +110,8 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 .check-item{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:10px;background:var(--surface-alt);margin-bottom:8px;}
 .check-item input{width:26px;height:26px;accent-color:var(--accent);flex-shrink:0;}
 .check-item label{flex:1;}
+.debrief-area{width:100%;min-height:140px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);color:var(--text);font-size:.95rem;font-family:inherit;line-height:1.5;resize:vertical;-webkit-appearance:none;}
+.debrief-hint{font-size:.78rem;color:var(--text-sub);margin:0 0 8px;}
 .btn-row{display:flex;gap:10px;} .btn-row>button{flex:1;padding:14px;}
 .btn-stack{display:flex;flex-direction:column;gap:10px;} .btn-stack>button{padding:14px;}
 .history-item{background:var(--surface-alt);border-radius:10px;padding:12px;margin-bottom:10px;}
@@ -174,6 +176,7 @@ button:disabled{opacity:.4;cursor:not-allowed;}
     <section class="card"><h2>自動解析（所要時間）</h2><div id="analysisList"></div><h3>フィードバック</h3><div id="feedbackList"></div></section>
     <section class="card"><h2>チーム連携評価</h2><div id="teamEvalList"></div></section>
     <section class="card"><h2>活動記録一覧</h2><div id="reportActions"></div><h3>自由記録</h3><div id="reportMemos"></div></section>
+    <section class="card"><h2>検討会メモ</h2><p class="debrief-hint">活動後の検討会で出た意見・改善点・気づきなどを記入してください（自動保存）</p><textarea id="debriefNotes" class="debrief-area" placeholder="例：&#10;・接触までの動きが詰まっていた&#10;・MIST報告で症状の経過が抜けた&#10;・固定の手順を共有しなおす"></textarea></section>
     <section class="card"><div class="btn-stack"><button class="btn-primary" id="btnSaveHistory">この記録を保存</button><div class="btn-row"><button class="btn-outline" id="btnCsv">CSV出力</button><button class="btn-outline" id="btnNewSession">新しい記録を開始</button></div></div></section>
   </div>
 </div>
@@ -197,7 +200,7 @@ const TEAM_EVALS=[{key:'leader',label:'リーダーが明確だった'},{key:'or
 const LS_CURRENT='estc_current',LS_HISTORY='estc_history',LS_THEME='estc_theme';
 
 /* ---------- 状態 ---------- */
-let state={practiceDate:'',teamName:'',caseName:'',elapsedMs:0,running:false,startStamp:0,scoreMode:false,timeline:[],teamEval:{}};
+let state={practiceDate:'',teamName:'',caseName:'',elapsedMs:0,running:false,startStamp:0,scoreMode:false,timeline:[],teamEval:{},debriefNotes:''};
 let tickInterval=null;
 
 /* ---------- ユーティリティ ---------- */
@@ -219,7 +222,7 @@ function startTick(){if(!tickInterval)tickInterval=setInterval(renderTimer,250);
 function stopTick(){clearInterval(tickInterval);tickInterval=null;}
 function timerStart(){if(state.running)return;state.running=true;state.startStamp=Date.now();startTick();updateTimerButtons();saveCurrent();}
 function timerPause(){if(!state.running)return;state.elapsedMs+=Date.now()-state.startStamp;state.running=false;stopTick();renderTimer();updateTimerButtons();saveCurrent();}
-function timerReset(){if(!confirm('タイマーと現在の記録をすべてリセットしますか？'))return;stopTick();state.elapsedMs=0;state.running=false;state.startStamp=0;state.timeline=[];state.teamEval={};updateTimerButtons();saveCurrent();renderPanel();}
+function timerReset(){if(!confirm('タイマーと現在の記録をすべてリセットしますか？'))return;stopTick();state.elapsedMs=0;state.running=false;state.startStamp=0;state.timeline=[];state.teamEval={};state.debriefNotes='';updateTimerButtons();saveCurrent();renderPanel();}
 function updateTimerButtons(){const s=document.getElementById('btnStart'),p=document.getElementById('btnPause');if(s)s.disabled=state.running;if(p)p.disabled=!state.running;}
 
 /* ============================================================
@@ -248,13 +251,14 @@ function showReport(){
   renderFeedback(at);renderTeamEvalInputs();
   const ra=document.getElementById('reportActions');ra.innerHTML='';state.timeline.filter(t=>t.type==='action').forEach(t=>{const l=document.createElement('div');l.className='report-line';l.innerHTML=`<span>${fmtTime(t.ms)}</span><span>${t.label}</span>`;ra.appendChild(l);});if(!ra.innerHTML)ra.innerHTML='<p class="empty-note">記録がありません</p>';
   const rm=document.getElementById('reportMemos');rm.innerHTML='';state.timeline.filter(t=>t.type==='memo').forEach(t=>{const l=document.createElement('div');l.className='report-line';l.innerHTML=`<span>${fmtTime(t.ms)}</span><span style="flex:1;text-align:right;">${escapeHtml(t.text)}</span>`;rm.appendChild(l);});if(!rm.innerHTML)rm.innerHTML='<p class="empty-note">自由記録がありません</p>';
+  const dn=document.getElementById('debriefNotes'); if(dn) dn.value=state.debriefNotes||'';
   const ov=document.getElementById('resultOverlay');ov.classList.remove('hidden');ov.scrollTop=0;
 }
 function renderTeamEvalInputs(){const wrap=document.getElementById('teamEvalList');wrap.innerHTML='';TEAM_EVALS.forEach(ev=>{const div=document.createElement('div');div.className='check-item';const id='ev_'+ev.key;div.innerHTML=`<input type="checkbox" id="${id}" ${state.teamEval[ev.key]?'checked':''}><label for="${id}">${ev.label}</label>`;div.querySelector('input').onchange=(e)=>{state.teamEval[ev.key]=e.target.checked;saveCurrent();};wrap.appendChild(div);});}
 function renderFeedback(at){const fb=document.getElementById('feedbackList');fb.innerHTML='';const msgs=[];if(at['contact']!==undefined){const s=at['contact']/1000;msgs.push(s<=20?{t:'接触までの時間は良好です',c:'fb-good'}:s<=40?{t:'接触までの時間は標準的です',c:'fb-info'}:{t:'接触までやや時間がかかっています',c:'fb-warn'});}else msgs.push({t:'接触の記録がありません。流れを確認してください',c:'fb-warn'});if(at['initial']!==undefined)msgs.push(at['initial']/1000<=60?{t:'初期評価までの時間は良好です',c:'fb-good'}:{t:'初期評価までの時間を短縮できるとより良いです',c:'fb-warn'});else msgs.push({t:'初期評価が記録されていません',c:'fb-warn'});if(at['mist']!==undefined)msgs.push(at['mist']/1000<=180?{t:'MIST報告のタイミングは良好です',c:'fb-good'}:{t:'MIST報告が遅れています',c:'fb-warn'});else msgs.push({t:'MIST報告が記録されていません',c:'fb-warn'});if(at['backup']===undefined)msgs.push({t:'応援要請が記録されていません。必要性を確認してください',c:'fb-info'});const cnt=Object.keys(at).length;if(cnt>=8)msgs.push({t:'活動項目を網羅できています',c:'fb-good'});else if(cnt<=3)msgs.push({t:'活動の流れを確認してください',c:'fb-warn'});msgs.forEach(m=>{const d=document.createElement('div');d.className='feedback '+m.c;d.textContent=m.t;fb.appendChild(d);});}
 
 /* ---------- CSV ---------- */
-function exportCsv(){if(state.timeline.length===0){alert('出力する記録がありません');return;}const rows=[['日時','経過時間','内容']];state.timeline.forEach(t=>rows.push([new Date(t.at).toLocaleString('ja-JP'),fmtTime(t.ms),t.type==='action'?t.label:('メモ: '+t.text)]));downloadCsv(rows,`タイムライン_${state.teamName||'隊'}_${state.practiceDate||todayStr()}.csv`);}
+function exportCsv(){if(state.timeline.length===0){alert('出力する記録がありません');return;}const rows=[['日時','経過時間','内容']];state.timeline.forEach(t=>rows.push([new Date(t.at).toLocaleString('ja-JP'),fmtTime(t.ms),t.type==='action'?t.label:('メモ: '+t.text)]));if(state.debriefNotes&&state.debriefNotes.trim()){rows.push(['','','']);rows.push(['検討会メモ','',state.debriefNotes]);}downloadCsv(rows,`タイムライン_${state.teamName||'隊'}_${state.practiceDate||todayStr()}.csv`);}
 function downloadCsv(rows,fname){const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
 
 /* ---------- 保存(進行中) ---------- */
@@ -262,16 +266,16 @@ function saveCurrent(){const pd=document.getElementById('practiceDate'),tn=docum
 function loadCurrent(){const saved=lsGet(LS_CURRENT,null);if(saved){state=Object.assign(state,saved);if(state.running)state.running=false;}else state.practiceDate=todayStr();const pd=document.getElementById('practiceDate'),tn=document.getElementById('teamName'),cn=document.getElementById('caseName'),sm=document.getElementById('scoreMode');if(pd)pd.value=state.practiceDate||todayStr();if(tn)tn.value=state.teamName||'';if(cn)cn.value=state.caseName||'';if(sm)sm.checked=state.scoreMode;updateTimerButtons();}
 
 /* ---------- 履歴 ---------- */
-function saveToHistory(){if(state.timeline.length===0){alert('保存する記録がありません');return;}saveCurrent();const lastMs=Math.max(0,...state.timeline.map(t=>t.ms));const rec={id:Date.now(),savedAt:new Date().toISOString(),practiceDate:state.practiceDate||todayStr(),teamName:state.teamName||'(隊名なし)',caseName:state.caseName||'(症例名なし)',scoreMode:state.scoreMode,score:state.scoreMode?calcScore():null,rank:state.scoreMode?calcRank(calcScore()):null,totalMs:lastMs,timeline:JSON.parse(JSON.stringify(state.timeline)),teamEval:Object.assign({},state.teamEval)};const h=lsGet(LS_HISTORY,[]);h.push(rec);lsSet(LS_HISTORY,h);alert('記録を保存しました');}
+function saveToHistory(){if(state.timeline.length===0){alert('保存する記録がありません');return;}saveCurrent();const lastMs=Math.max(0,...state.timeline.map(t=>t.ms));const rec={id:Date.now(),savedAt:new Date().toISOString(),practiceDate:state.practiceDate||todayStr(),teamName:state.teamName||'(隊名なし)',caseName:state.caseName||'(症例名なし)',scoreMode:state.scoreMode,score:state.scoreMode?calcScore():null,rank:state.scoreMode?calcRank(calcScore()):null,totalMs:lastMs,timeline:JSON.parse(JSON.stringify(state.timeline)),teamEval:Object.assign({},state.teamEval),debriefNotes:state.debriefNotes||''};const h=lsGet(LS_HISTORY,[]);h.push(rec);lsSet(LS_HISTORY,h);alert('記録を保存しました');}
 function renderHistory(){const h=lsGet(LS_HISTORY,[]);document.getElementById('statCount').textContent=h.length;const scored=h.filter(x=>x.score!==null);if(scored.length){document.getElementById('statBest').textContent=Math.max(...scored.map(x=>x.score))+'点';document.getElementById('statAvg').textContent=Math.round(scored.reduce((s,x)=>s+x.score,0)/scored.length)+'点';}else{document.getElementById('statBest').textContent='-';document.getElementById('statAvg').textContent='-';}document.getElementById('statFastest').textContent=h.length?fmtTime(Math.min(...h.map(x=>x.totalMs))):'-';const rl=document.getElementById('timeRanking'),re=document.getElementById('rankEmpty');rl.innerHTML='';if(!h.length)re.classList.remove('hidden');else{re.classList.add('hidden');[...h].sort((a,b)=>a.totalMs-b.totalMs).slice(0,10).forEach((x,i)=>{const li=document.createElement('li');const st=x.score!==null?` / ${x.score}点(${x.rank})`:'';li.innerHTML=`<span><span class="rk-no">${i+1}</span>${escapeHtml(x.teamName)} (${escapeHtml(x.caseName)})</span><strong>${fmtTime(x.totalMs)}${st}</strong>`;rl.appendChild(li);});}const lw=document.getElementById('historyList'),he=document.getElementById('historyEmpty');lw.innerHTML='';if(!h.length)he.classList.remove('hidden');else{he.classList.add('hidden');[...h].reverse().forEach(x=>{const div=document.createElement('div');div.className='history-item';const st=x.score!==null?`<span style="color:var(--accent);font-weight:700;">${x.score}点 (${x.rank})</span>`:'<span style="color:var(--text-sub);">採点なし</span>';div.innerHTML=`<div class="hi-head"><span class="hi-title">${escapeHtml(x.teamName)}</span><span class="hi-date">${x.practiceDate}</span></div><div class="hi-meta">症例: ${escapeHtml(x.caseName)} ／ 活動時間: ${fmtTime(x.totalMs)} ／ ${st}</div><div class="hi-actions"><button class="btn-outline" data-act="view" data-id="${x.id}">詳細</button><button class="btn-outline" data-act="csv" data-id="${x.id}">CSV</button><button class="btn-danger" data-act="del" data-id="${x.id}">削除</button></div>`;div.querySelectorAll('button').forEach(b=>{b.onclick=()=>handleHistoryAction(b.dataset.act,Number(b.dataset.id));});lw.appendChild(div);});}}
-function handleHistoryAction(act,id){const h=lsGet(LS_HISTORY,[]);const rec=h.find(x=>x.id===id);if(!rec)return;if(act==='del'){if(!confirm('この記録を削除しますか？'))return;lsSet(LS_HISTORY,h.filter(x=>x.id!==id));renderHistory();}else if(act==='csv'){const rows=[['日時','経過時間','内容']];rec.timeline.forEach(t=>rows.push([new Date(t.at).toLocaleString('ja-JP'),fmtTime(t.ms),t.type==='action'?t.label:('メモ: '+t.text)]));downloadCsv(rows,`タイムライン_${rec.teamName}_${rec.practiceDate}.csv`);}else if(act==='view'){let txt=`【${rec.teamName}】\n練習日: ${rec.practiceDate}\n症例: ${rec.caseName}\n活動時間: ${fmtTime(rec.totalMs)}\n`;if(rec.score!==null)txt+=`得点: ${rec.score}点 (${rec.rank})\n`;txt+=`\n--- タイムライン ---\n`;rec.timeline.forEach(t=>txt+=`${fmtTime(t.ms)} ${t.type==='action'?t.label:'メモ: '+t.text}\n`);txt+=`\n--- チーム連携評価 ---\n`;TEAM_EVALS.forEach(ev=>txt+=`${ev.label}: ${rec.teamEval[ev.key]?'○':'×'}\n`);alert(txt);}}
+function handleHistoryAction(act,id){const h=lsGet(LS_HISTORY,[]);const rec=h.find(x=>x.id===id);if(!rec)return;if(act==='del'){if(!confirm('この記録を削除しますか？'))return;lsSet(LS_HISTORY,h.filter(x=>x.id!==id));renderHistory();}else if(act==='csv'){const rows=[['日時','経過時間','内容']];rec.timeline.forEach(t=>rows.push([new Date(t.at).toLocaleString('ja-JP'),fmtTime(t.ms),t.type==='action'?t.label:('メモ: '+t.text)]));if(rec.debriefNotes&&rec.debriefNotes.trim()){rows.push(['','','']);rows.push(['検討会メモ','',rec.debriefNotes]);}downloadCsv(rows,`タイムライン_${rec.teamName}_${rec.practiceDate}.csv`);}else if(act==='view'){let txt=`【${rec.teamName}】\n練習日: ${rec.practiceDate}\n症例: ${rec.caseName}\n活動時間: ${fmtTime(rec.totalMs)}\n`;if(rec.score!==null)txt+=`得点: ${rec.score}点 (${rec.rank})\n`;txt+=`\n--- タイムライン ---\n`;rec.timeline.forEach(t=>txt+=`${fmtTime(t.ms)} ${t.type==='action'?t.label:'メモ: '+t.text}\n`);txt+=`\n--- チーム連携評価 ---\n`;TEAM_EVALS.forEach(ev=>txt+=`${ev.label}: ${rec.teamEval[ev.key]?'○':'×'}\n`);if(rec.debriefNotes&&rec.debriefNotes.trim())txt+=`\n--- 検討会メモ ---\n${rec.debriefNotes}\n`;alert(txt);}}
 
 /* ---------- テーマ ---------- */
 function applyTheme(t){document.body.classList.toggle('dark',t==='dark');lsSet(LS_THEME,t);}
 function initTheme(){const s=lsGet(LS_THEME,null);if(s)applyTheme(s);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)applyTheme('dark');}
 
 /* ---------- 新セッション ---------- */
-function newSession(){if(!confirm('現在の記録をクリアして新しい記録を開始しますか？（保存していない記録は消えます）'))return;stopTick();state.elapsedMs=0;state.running=false;state.startStamp=0;state.timeline=[];state.teamEval={};updateTimerButtons();saveCurrent();document.getElementById('resultOverlay').classList.add('hidden');renderPanel();}
+function newSession(){if(!confirm('現在の記録をクリアして新しい記録を開始しますか？（保存していない記録は消えます）'))return;stopTick();state.elapsedMs=0;state.running=false;state.startStamp=0;state.timeline=[];state.teamEval={};state.debriefNotes='';updateTimerButtons();saveCurrent();document.getElementById('resultOverlay').classList.add('hidden');renderPanel();}
 
 /* ============================================================
    初期化
@@ -287,6 +291,7 @@ function init(){
   document.getElementById('scoreMode').onchange=e=>{state.scoreMode=e.target.checked;saveCurrent();renderPanel();};
   document.getElementById('btnFinish').onclick=showReport;
   document.getElementById('btnBackToPanel').onclick=()=>document.getElementById('resultOverlay').classList.add('hidden');
+  document.getElementById('debriefNotes').addEventListener('input',e=>{state.debriefNotes=e.target.value;saveCurrent();});
   document.getElementById('btnCsv').onclick=exportCsv;
   document.getElementById('btnSaveHistory').onclick=saveToHistory;
   document.getElementById('btnNewSession').onclick=newSession;
