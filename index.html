@@ -69,6 +69,12 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 .conn{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;}
 .conn .dot{width:9px;height:9px;border-radius:50%;background:#999;}
 .conn.ok .dot{background:#3ad37a;} .conn.ng .dot{background:#e06a50;}
+.sync-banner{font-size:.72rem;line-height:1.3;padding:5px 9px;margin-top:6px;border-radius:6px;display:none;word-break:break-all;font-weight:600;}
+.sync-banner.show{display:block;}
+.sync-banner.sync-ok{background:rgba(255,255,255,.18);color:#fff;}
+.sync-banner.sync-err{background:#c0492f;color:#fff;}
+#syncBannerDisplay.sync-ok{background:rgba(46,139,87,.15);color:#246b43;}
+body.dark #syncBannerDisplay.sync-ok{background:rgba(76,175,125,.22);color:#9be0b8;}
 
 /* ============================================================
    モード選択画面
@@ -232,6 +238,7 @@ button:disabled{opacity:.4;cursor:not-allowed;}
       <div class="tp-field"><label>症例名</label><input type="text" id="caseName" placeholder="例: 交通外傷・意識障害" autocomplete="off"></div>
       <div class="tp-field tp-switch"><span>競技採点モード（自動加点）</span><label class="switch"><input type="checkbox" id="scoreMode"><span class="slider"></span></label></div>
     </div>
+    <div id="syncBannerRemote" class="sync-banner"></div>
   </div>
   <div class="panel">
     <div class="timer-card">
@@ -252,6 +259,7 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 <!-- 表示専用画面 -->
 <div class="display-screen hidden" id="displayScreen">
   <div class="display-head"><div class="display-title">学生救急技能選手権<small id="dispSummary">活動タイムライン記録</small></div><span class="conn" id="displayConn"><span class="dot"></span><span></span></span></div>
+  <div id="syncBannerDisplay" class="sync-banner"></div>
   <div class="display-timer" id="dispTimer">00:00</div>
   <div class="display-score hidden" id="dispScore"><span class="rank-badge" id="dispRank">-</span><span id="dispScoreNum">0</span> / 100点</div>
   <div class="display-log"><ul id="dispLogList"></ul><p class="display-empty" id="dispLogEmpty">記録の開始を待っています…</p></div>
@@ -338,9 +346,23 @@ function connectFirebase(){
     // 接続状態を監視
     db.ref('.info/connected').on('value',(snap)=>{ setConn(snap.val()===true); });
 
+    const roomKey=encodeRoom(ROOM);
+    console.log('[sync] mode=%s room=%s path=rooms/%s/state url=%s', MODE, ROOM, roomKey, window.FIREBASE_CONFIG.databaseURL);
+    updateSyncBanner('ok','ルーム: '+roomKey+' / '+(MODE==='display'?'受信待機中…':'送信準備OK'));
+
     if(MODE==='display'){
-      // 表示端末: 状態の変化を購読して反映
-      roomRef.on('value',(snap)=>{ const v=snap.val(); if(v) applyRemoteState(v); });
+      // 表示端末: 状態の変化を購読して反映。第2引数(失敗時)で権限拒否などを表示
+      roomRef.on('value',
+        (snap)=>{
+          const v=snap.val();
+          if(v) applyRemoteState(v);
+          updateSyncBanner('ok', 'ルーム: '+roomKey+' / 最終受信: '+nowHms()+(v?'':'（データなし）'));
+        },
+        (err)=>{
+          updateSyncBanner('err', '受信失敗: '+(err&&err.code?err.code:(err&&err.message?err.message:err))+'（databaseURL/ルール/ルーム名を確認）');
+          console.error('[sync] read cancelled', err);
+        }
+      );
     }
     fbReady=true;
   }catch(e){ setConn(false); showSyncError('同期の初期化に失敗しました: '+e.message); }
@@ -349,10 +371,19 @@ function connectFirebase(){
 // ルーム名をDBのキーに使える形へ（禁止文字を除去）
 function encodeRoom(name){ return String(name||'default').replace(/[.#$\[\]\/]/g,'_').slice(0,120); }
 
-// リモコンが操作するたびに状態を書き込み
+function nowHms(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');}
+
+// リモコンが操作するたびに状態を書き込み（失敗は必ず可視化する）
 function pushState(){
   if(MODE==='remote' && fbReady && roomRef){
-    roomRef.set(serializeState()).catch(()=>{});
+    const roomKey=encodeRoom(ROOM);
+    roomRef.set(serializeState())
+      .then(()=>{ updateSyncBanner('ok', 'ルーム: '+roomKey+' / 最終送信: '+nowHms()); })
+      .catch(e=>{
+        const code=(e&&e.code)?e.code:(e&&e.message?e.message:String(e));
+        updateSyncBanner('err', '送信失敗: '+code+'（databaseURL/ルール/ルーム名を確認）');
+        console.error('[sync] write failed', e);
+      });
   }
 }
 function serializeState(){return{practiceDate:state.practiceDate,teamName:state.teamName,caseName:state.caseName,elapsedMs:currentElapsed(),running:state.running,startStamp:state.running?Date.now():0,scoreMode:state.scoreMode,timeline:state.timeline||[],teamEval:state.teamEval||{},updatedAt:Date.now()};}
@@ -366,9 +397,17 @@ function applyRemoteState(payload){
 function setConn(ok){
   const txt=ok?'同期中':'未接続';
   document.querySelectorAll('#remoteConn,#displayConn').forEach(el=>{el.classList.toggle('ok',ok);el.classList.toggle('ng',!ok);const sp=el.querySelectorAll('span');if(sp[1])sp[1].textContent=txt;});
+  if(!ok) updateSyncBanner('err','未接続（ネットワークまたはdatabaseURLを確認）');
+}
+function updateSyncBanner(kind,msg){
+  const id = MODE==='display' ? 'syncBannerDisplay' : 'syncBannerRemote';
+  const el = document.getElementById(id); if(!el) return;
+  el.textContent = msg;
+  el.classList.remove('sync-ok','sync-err');
+  el.classList.add('show', kind==='ok'?'sync-ok':'sync-err');
 }
 function showSyncError(msg){
-  // 表示端末では画面に、リモコンでは一度だけ通知
+  updateSyncBanner('err', msg);
   const el=document.getElementById('dispLogEmpty');
   if(MODE==='display'&&el){el.textContent=msg;el.classList.remove('hidden');}
   console.warn(msg);
