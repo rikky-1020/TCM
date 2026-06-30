@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>学生救急救命技術選手権 採点表</title>
+<style>
+:root{
+  --ink:#1a1d24;
+  --paper:#f7f5f0;
+  --line:#d8d2c4;
+  --accent:#b03a2e;       /* 緊急の赤 */
+  --accent-deep:#7a2419;
+  --gold:#c79a3a;
+  --good:#2f6b4f;
+  --soft:#efece4;
+  --shadow:rgba(26,29,36,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+/* ---------- ヘッダ ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:var(--ink);
+  color:var(--paper);
+  padding:env(safe-area-inset-top) 0 0;
+  box-shadow:0 2px 8px var(--shadow);
+}
+.head-inner{padding:10px 14px 12px;}
+.title-row{display:flex;align-items:baseline;gap:8px;}
+.title-mark{
+  font-weight:800;font-size:11px;letter-spacing:.18em;
+  color:var(--gold);text-transform:uppercase;
+}
+h1{font-size:15px;margin:2px 0 0;font-weight:700;letter-spacing:.02em;}
+/* スコアバー */
+.scorebar{
+  display:flex;align-items:stretch;gap:1px;
+  background:rgba(255,255,255,.08);
+  border-radius:10px;overflow:hidden;margin-top:10px;
+}
+.scorecell{flex:1;text-align:center;padding:6px 2px;background:rgba(255,255,255,.04);}
+.scorecell .lbl{font-size:9px;opacity:.7;letter-spacing:.05em;}
+.scorecell .val{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;}
+.scorecell.total{background:var(--accent);}
+.scorecell.total .val{font-size:20px;}
+/* ---------- 種目タブ ---------- */
+.tabs{
+  display:flex;gap:6px;overflow-x:auto;padding:10px 14px;
+  background:var(--soft);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:40;-webkit-overflow-scrolling:touch;
+}
+.tab{
+  flex:0 0 auto;border:1px solid var(--line);background:#fff;
+  color:var(--ink);padding:8px 14px;border-radius:20px;
+  font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;
+  transition:all .15s;
+}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+/* タブをヘッダの下に貼り付ける場合の二段スティッキー対策 */
+.tabwrap{position:sticky;top:0;z-index:40;}
+/* ---------- 本体 ---------- */
+main{padding:14px 12px 120px;max-width:760px;margin:0 auto;}
+.meta{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;
+}
+.meta label{font-size:11px;color:#7a756a;display:block;margin-bottom:3px;font-weight:600;}
+.meta input{
+  width:100%;border:1px solid var(--line);border-radius:8px;
+  padding:9px 10px;font-size:14px;background:#fff;font-family:inherit;
+}
+.meta .full{grid-column:1/-1;}
+/* セクション */
+.section{margin-bottom:22px;}
+.sec-head{
+  display:flex;align-items:center;gap:8px;margin:0 0 10px;
+  padding-bottom:6px;border-bottom:2px solid var(--ink);
+}
+.sec-no{
+  background:var(--ink);color:var(--paper);font-size:11px;font-weight:800;
+  width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+}
+.sec-title{font-size:15px;font-weight:800;letter-spacing:.02em;}
+.sec-sub{font-size:11px;color:#8a857a;margin-left:auto;font-variant-numeric:tabular-nums;}
+/* 項目カード */
+.item{
+  background:#fff;border:1px solid var(--line);border-radius:10px;
+  padding:10px 11px;margin-bottom:8px;
+}
+.item.big{border-left:3px solid var(--gold);}
+.item-top{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;}
+.item-num{
+  flex:0 0 auto;font-size:10px;font-weight:700;color:#aaa39a;
+  font-variant-numeric:tabular-nums;min-width:16px;text-align:right;padding-top:2px;
+}
+.item-grp{
+  flex:0 0 auto;font-size:10px;font-weight:700;color:var(--accent);
+  background:rgba(176,58,46,.08);padding:2px 6px;border-radius:5px;align-self:flex-start;
+}
+.item-txt{font-size:13px;line-height:1.45;flex:1;}
+/* 採点ボタン */
+.scorebtns{display:flex;gap:5px;}
+.sb{
+  flex:1;border:1px solid var(--line);background:#fbfaf7;border-radius:8px;
+  padding:8px 2px;text-align:center;cursor:pointer;transition:all .12s;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+}
+.sb .sb-pt{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+.sb .sb-lb{font-size:9px;color:#8a857a;}
+.sb.sel-3{background:var(--good);border-color:var(--good);}
+.sb.sel-2{background:#3a7a8f;border-color:#3a7a8f;}
+.sb.sel-1{background:var(--gold);border-color:var(--gold);}
+.sb.sel-0{background:#8a857a;border-color:#8a857a;}
+.sb.sel-3 *,.sb.sel-2 *,.sb.sel-1 *,.sb.sel-0 *{color:#fff;}
+/* NG */
+.ng .item{border-left:3px solid var(--accent);}
+.ng-row{
+  display:flex;align-items:center;gap:10px;background:#fff;
+  border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:7px;cursor:pointer;
+}
+.ng-row.on{background:rgba(176,58,46,.07);border-color:var(--accent);}
+.ng-check{
+  flex:0 0 auto;width:24px;height:24px;border:2px solid var(--line);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;font-weight:800;
+}
+.ng-row.on .ng-check{background:var(--accent);border-color:var(--accent);}
+.ng-txt{font-size:12.5px;line-height:1.4;}
+.ng-note{font-size:11px;color:var(--accent);font-weight:700;margin:4px 0 8px;}
+/* フッタ操作 */
+.footer{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:rgba(247,245,240,.96);backdrop-filter:blur(8px);
+  border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  display:flex;gap:10px;align-items:center;
+}
+.foot-total{flex:1;}
+.foot-total .l{font-size:10px;color:#8a857a;}
+.foot-total .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);}
+.foot-total .v small{font-size:13px;color:#8a857a;font-weight:600;}
+.btn{
+  border:none;border-radius:9px;padding:11px 16px;font-size:13px;font-weight:700;
+  font-family:inherit;cursor:pointer;
+}
+.btn-reset{background:#fff;border:1px solid var(--line);color:var(--ink);}
+.btn-share{background:var(--ink);color:var(--paper);}
+.btn-pdf{background:var(--accent);color:#fff;}
+.subtotals{font-size:10px;color:#8a857a;line-height:1.6;margin-top:2px;}
+/* トースト */
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:24px;
+  font-size:13px;opacity:0;transition:all .25s;z-index:80;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.empty-note{font-size:11px;color:#aaa39a;padding:4px 2px;}
+/* TCM連携パネル */
+.tcm-link{
+  background:#fff;border:1px solid var(--line);border-left:3px solid var(--good);
+  border-radius:10px;padding:11px 12px;margin-bottom:16px;
+}
+.tcm-link-head{font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;}
+.tcm-reload{
+  margin-left:auto;font-size:11px;font-weight:700;font-family:inherit;
+  border:1px solid var(--line);background:var(--soft);color:var(--ink);
+  border-radius:14px;padding:4px 11px;cursor:pointer;
+}
+.tcm-empty{font-size:12px;color:#8a857a;margin:8px 0 0;line-height:1.6;}
+.tcm-meta{font-size:11px;color:#8a857a;margin:6px 0 8px;font-variant-numeric:tabular-nums;}
+.tcm-rows{display:flex;flex-direction:column;gap:3px;}
+.tcm-row{display:flex;gap:10px;font-size:12.5px;padding:3px 0;border-bottom:1px dotted var(--line);}
+.tcm-row.memo{color:#5a6b73;}
+.tcm-t{flex:0 0 auto;font-weight:700;font-variant-numeric:tabular-nums;color:var(--good);min-width:46px;}
+.tcm-sub{font-size:10px;font-weight:700;color:#8a857a;margin-top:6px;letter-spacing:.05em;}
+.item-memo{
+  width:100%;margin-top:7px;border:1px dashed var(--line);border-radius:7px;
+  padding:7px 9px;font-size:12px;background:#fbfaf7;font-family:inherit;color:var(--ink);
+}
+.item-memo:focus{outline:none;border-color:var(--accent);border-style:solid;background:#fff;}
+/* 判定基準ボタン */
+.info-btn{
+  flex:0 0 auto;width:24px;height:24px;border-radius:50%;
+  border:1.5px solid var(--accent);background:#fff;color:var(--accent);
+  font-size:13px;font-weight:700;font-style:italic;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;align-self:flex-start;
+}
+.info-btn.unset{border-color:var(--line);color:#bbb4a8;}
+/* モーダル */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(26,29,36,.5);z-index:90;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-bg.show{display:flex;}
+.modal{
+  background:var(--paper);width:100%;max-width:560px;
+  border-radius:18px 18px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom));
+  max-height:80vh;overflow-y:auto;animation:slideUp .2s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-grip{width:38px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 14px;}
+.modal-title{font-size:14px;font-weight:800;margin-bottom:14px;line-height:1.4;}
+.modal-section-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent);margin-bottom:8px;}
+.grade-row{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start;}
+.grade-tag{
+  flex:0 0 auto;width:36px;text-align:center;font-size:11px;font-weight:800;
+  padding:3px 0;border-radius:6px;color:#fff;
+}
+.grade-tag.g3{background:var(--good);}
+.grade-tag.g2{background:#3a7a8f;}
+.grade-tag.g1{background:var(--gold);}
+.grade-tag.g0{background:#8a857a;}
+.grade-txt{font-size:12px;line-height:1.45;flex:1;color:#3a3631;}
+.modal-criteria{
+  margin-top:16px;padding:13px;background:#fff;border:1px solid var(--line);
+  border-radius:10px;font-size:13px;line-height:1.6;color:var(--ink);
+}
+.modal-criteria.unset{color:#aaa39a;font-style:italic;}
+.modal-close{
+  width:100%;margin-top:16px;border:none;background:var(--ink);color:var(--paper);
+  border-radius:10px;padding:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;
+}
+/* ---------- 分割レイアウト ---------- */
+.split{display:flex;width:100%;min-height:100vh;}
+.pane-score{flex:1;min-width:0;position:relative;display:flex;flex-direction:column;}
+.pane-tcm{
+  flex:0 0 42%;border-left:2px solid var(--line);background:#fff;
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.tcm-bar{
+  background:var(--ink);color:var(--paper);padding:8px 12px;
+  display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;flex:0 0 auto;
+}
+.tcm-scroll{
+  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.pane-tcm iframe{display:block;width:100%;height:100%;min-height:1200px;border:none;background:#fff;}
+/* 常に左右分割。狭い画面では右ペインをやや細く、UIを詰める */
+@media (max-width:820px){
+  .pane-tcm{flex:0 0 38%;}
+  main{padding:10px 8px 120px;}
+  .scorebtns{gap:3px;}
+}
+@media (max-width:560px){
+  .pane-tcm{flex:0 0 34%;}
+  .tcm-bar{font-size:10px;padding:6px 6px;}
+}
+</style>
+</head>
+<body>
+
+<div class="split">
+<div class="pane-score">
+<header>
+  <div class="head-inner">
+    <div class="title-row">
+      <span class="title-mark">JESA 学生選手権</span>
+    </div>
+    <h1 id="eventTitle">疾病 採点表</h1>
+    <div class="scorebar">
+      <div class="scorecell"><div class="lbl">共通①</div><div class="val" id="sc1">0</div></div>
+      <div class="scorecell"><div class="lbl">プロト②</div><div class="val" id="sc2">0</div></div>
+      <div class="scorecell"><div class="lbl">シナリオ③</div><div class="val" id="sc3">0</div></div>
+      <div class="scorecell"><div class="lbl">NG</div><div class="val" id="scng">0</div></div>
+      <div class="scorecell total"><div class="lbl">総計</div><div class="val" id="scTotal">0</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="tabwrap">
+  <nav class="tabs" id="tabs"></nav>
+</div>
+
+<main>
+  <div class="meta">
+    <div><label>学校名</label><input id="m_school" placeholder="学校名"></div>
+    <div><label>チーム名</label><input id="m_team" placeholder="チーム名"></div>
+    <div><label>ST No.</label><input id="m_st" placeholder="ST No."></div>
+    <div><label>評価者署名</label><input id="m_judge" placeholder="氏名"></div>
+  </div>
+  <div id="tcmLink" class="tcm-link"></div>
+  <div id="content"></div>
+</main>
+
+<div class="footer">
+  <div class="foot-total">
+    <div class="l">総計</div>
+    <div class="v"><span id="footTotal">0</span><small> / <span id="footMax">0</span></small></div>
+    <div class="subtotals" id="footSub"></div>
+  </div>
+  <button class="btn btn-reset" id="btnReset">リセット</button>
+  <button class="btn btn-share" id="btnShare">集計</button>
+  <button class="btn btn-pdf" id="btnPdf">PDF</button>
+</div>
+</div><!-- /.pane-score -->
+
+<div class="pane-tcm">
+  <div class="tcm-bar">タイムライン記録（TCM）</div>
+  <div class="tcm-scroll">
+    <iframe src="./tcm.html" title="TCM タイムライン記録"
+      allow="clipboard-read; clipboard-write"></iframe>
+  </div>
+</div>
+</div><!-- /.split -->
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-grip"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-section-lbl">評価基準（4段階）</div>
+    <div class="grade-row"><span class="grade-tag g3">優 3</span><span class="grade-txt">各種プロトコル等に基づいた模範的な対応または活動である。</span></div>
+    <div class="grade-row"><span class="grade-tag g2">良 2</span><span class="grade-txt">各種プロトコル等に基づいた対応または活動である／（単純に）実施した。</span></div>
+    <div class="grade-row"><span class="grade-tag g1">可 1</span><span class="grade-txt">各種プロトコル等に基づいているとは言えない対応または活動である。</span></div>
+    <div class="grade-row"><span class="grade-tag g0">不可 0</span><span class="grade-txt">各種プロトコル等に基づいていない／（単純に）実施していない／評価対象外。</span></div>
+    <div class="modal-section-lbl" style="margin-top:16px;">この項目の判定基準</div>
+    <div class="modal-criteria" id="modalCriteria"></div>
+    <button class="modal-close" id="modalClose">閉じる</button>
+  </div>
+</div>
+
+<script>
+/* ====== データ定義 ====== */
+/* t=評価項目, c=判定基準(マニュアル20191113より流用 / 空文字は未設定) */
+const COMMON = [
+ {t:"指令内容の確認/PAC聴取時期＆内容",
+  c:"【No.1 指令内容に基づく病態及び現場状況の推測】指令内容から幾つかの病態及び現場の状況を想起したか。"},
+ {t:"感染防御/携行資器材の確認",
+  c:"【No.2】指令内容から現場到着までに必要な感染防護具を着用したか（マスクは声が聞き取りにくくなるため着用したものとみなす）。現場活動に必要な資器材を準備したか。両方できた場合を「標準」とする。"},
+ {t:"活動方針の共有",
+  c:"【No.3 隊員に対する活動方針の伝達】指令内容から、現場到着後の活動方針を隊員に指示したか。"},
+ {t:"安全の確認・二次災害防止の必要性判断",
+  c:"【No.4】現場到着後に安全確認を行ったか。"},
+ {t:"発症状況・受傷機転の確認",
+  c:"【No.5】発症状況・受傷機転を確認したか。"},
+ {t:"傷病者数の確認/応援要請/搬送（搬出）経路の確認",
+  c:"【No.6/7/8】傷病者数の確認を行ったか。応援要請する場合はその必要性・理由を明確に口述したか。安全かつ迅速に車内搬入する経路を確認したか。"},
+ {t:"傷病者の状況確認（顔色、体位、四肢の変形、外出血、嘔吐痕）",
+  c:"【No.9】接触するまでの間に、視認できる範囲で観察を行ったか。全て行った場合を「標準」とする。"},
+ {t:"初期評価（ABCD評価）が適切に行えた",
+  c:"【No.11】全て適切に行った場合は「標準」。どれかが抜けた、または不十分な場合は「不可」とする。"},
+ {t:"情報収集が適切だった(GUMBA・BAGMASK・SAMPLER)",
+  c:"【No.16】病歴聴取は要領よく行えたか。GUMBA/BAGMASK/SAMPLERの各項目に沿って必要な情報を収集できたか。"},
+ {t:"適切な体位管理ができた",
+  c:"【No.21 搬送法/体位管理と要領】搬送中の体位管理は安全かつ適切だったか。"},
+ {t:"愛護的な搬送ができた",
+  c:"【No.21/30】現場から車内までの搬送法は安全かつ適切だったか。傷病者・資器材への愛護的な取り扱いができたか。"},
+ {t:"観察やバイタル測定の手技が適切だった",
+  c:"【No.19 継続/詳細観察】必要なバイタルサインの測定と評価を含め、観察手技が適切だったか。"},
+ {t:"傷病者や関係者への接遇やICが適切だった",
+  c:"【No.29】多様なコミュニケーションスキルを用いて接していたか。処置や搬送先に関する説明は丁寧に行われていたか。"},
+ {t:"資器材の取扱いが適切だった",
+  c:"【No.30】資器材を愛護的に取り扱っていたか（例：コードを踏む・ひっかける等は愛護的とは言えない）。"},
+ {t:"隊のチームワーク（情報共有/伝達/サポート等）",
+  c:"【No.27/28】隊長の統率力・情報集約力を評価。隊員・機関員が行った情報収集と処置内容を把握していたか。隊員が必要な情報収集・処置を行い隊長へ伝達・報告できたか。"}
+];
+
+const NG_ITEMS = [
+ "法令・競技規則・プロトコルに則った活動ができなかった",
+ "活動にふさわしい身だしなみでなかった（服装・装備・髪・髭・爪・忘れ物等）",
+ "活動中に不適切な態度があった",
+ "活動に関する資器材の不備や忘れ物があった",
+ "活動中の資器材や傷病者の扱いが愛護的でなかった（またぐ・蹴る・落下させる等）",
+ "想定終了時刻までに第１報が完了していない"
+];
+
+/* g = グループラベル, t = 評価内容 */
+const EVENTS = {
+ disease:{
+  name:"疾病",
+  proto:[
+   {g:"状況評価",t:"ハイリスク症候の判断",c:"指令・状況からハイリスク症候（緊急度の高い症候）を想起・判断できたか。"},
+   {g:"初期評価",t:"内因性L＆Gの適否判断と宣言ができた",c:"【No.14】初期評価の結果から内因性ロード＆ゴーと判断した場合、その根拠と共に隊員間で情報共有したか。宣言したが根拠が不十分な場合は「標準」。"},
+   {g:"初期評価",t:"判断の根拠が明確であった",c:"L＆Gの適否・各種判断について、根拠が明確に示されていたか。"},
+   {g:"情報収集",t:"必要な情報を適切に収集できた",c:"【No.16/17】GUMBA・SAMPLER・OPQRST等を用い、病態に必要な情報・病歴・疼痛情報を要領よく聴取できたか。"},
+   {g:"バイタル",t:"バイタル・問診結果から病態推理ができた",c:"【No.19】バイタルサインの測定・評価と問診結果を統合し、病態を推理できたか。"},
+   {g:"判断",t:"症候別の緊急度・重症度判断ができた",c:"症候に応じて緊急度・重症度を適切に判断できたか（PEMEC準拠）。"},
+   {g:"判断",t:"優先順位を考えて活動できた",c:"病態・緊急度を踏まえ、観察・処置・搬送の優先順位を考えて活動できたか。"},
+   {g:"判断",t:"PEMEC以外のアルゴリズムへの移行について適切に判断できた",c:"意識障害（PCEC/PSLS）・心肺停止等、PEMEC以外の適切なアルゴリズムへの移行を判断できたか。"},
+   {g:"判断",t:"特定行為の適応判断ができた",c:"【種目D/E/F】特定行為の適応を明確な根拠をもって判断できたか。"},
+   {g:"判断",t:"内因性L＆Gの適否判断（総括）と宣言ができた",c:"【No.18】全身/重点観察や問診結果から内因性L＆Gの適否を総括的に判断し、根拠と共に宣言・情報共有できたか。"},
+   {g:"全身・重点観察",t:"病態を考慮し症候に応じた観察ができた",c:"【No.15】症状・徴候に応じた全身/重点観察を行ったか。根拠のない中断は「不可」。"},
+   {g:"全身・重点観察",t:"継続観察/追加情報収集が適切にできた（no L&G）/（L&G時）",c:"【No.19/20】継続・詳細観察、必要なバイタル再測定、容態変化時のABCD再評価が適切にできたか。"},
+   {g:"処置",t:"処置後の評価が適切にできた",c:"【No.26】行った処置を確認したか。また必要に応じて追加処置等を行ったか。"},
+   {g:"病院選定・連絡",t:"診療科目の適切な選定ができた",c:"【No.22】病態に応じた医療機関・診療科目を選定したか。ドクターヘリ要請時は根拠が明確か。"},
+   {g:"車内活動",t:"病院連絡が適切にできた",c:"【No.23/24】第一報（MIST/SBAR）を簡潔に要領よく行えたか。第二報で補足情報を伝えられたか。"}
+  ]
+ },
+ trauma:{
+  name:"外傷",
+  proto:[
+   {g:"状況評価/受傷機転",t:"高リスク受傷機転か否かの判断が適切だった",c:"【No.5】受傷機転から高リスクか否かを適切に判断できたか。"},
+   {g:"頸椎保護",t:"頸椎保護が適切だった",c:"【No.10/種目B-1】受傷機転から用手による脊椎運動制限を行ったか。間違った判断で中断した場合は「不可」。"},
+   {g:"緊急処置",t:"緊急処置を適切に指示した（適応時）",c:"【No.12/種目B-2】気道確保・止血・被覆・固定など、初期評価の結果に応じた緊急処置を適切に指示・実施したか。"},
+   {g:"結果・判断",t:"ロード＆ゴー適否の宣言／宣言の根拠が適切だった",c:"【No.14】初期評価の結果からL＆Gと判断した場合、根拠と共に隊員間で情報共有したか。宣言したが根拠不十分は「標準」。"},
+   {g:"頭部/顔面/頸部",t:"視診（目線）／触診（位置）／ネックカラー装着",c:"目線を傷病者に向け視診し、適切な位置を触診したか。ネックカラー装着が適切だったか。"},
+   {g:"胸部",t:"視診（目線/胸郭の左右差）／聴診（位置/健側部から）",c:"胸郭の左右差を視診し、健側から適切な位置で聴診できたか。"},
+   {g:"腹部",t:"視診（目線/腹部膨隆の有無）／触診（位置/健側部から）",c:"腹部膨隆の有無を視診し、健側から適切な位置で触診できたか。"},
+   {g:"骨盤部",t:"視診（目線/下肢長差）／触診（位置）",c:"下肢長差を視診し、適切な位置を触診できたか。"},
+   {g:"上肢/下肢",t:"視診（目線）／触診（位置）／神経学的所見",c:"視診・触診を適切な位置で行い、神経学的所見を確認できたか。"},
+   {g:"背面",t:"視診（目線）／触診（位置/後頭部〜臀部）",c:"後頭部から臀部まで適切な位置を視診・触診できたか。"},
+   {g:"結果・判断",t:"ロード＆ゴーの宣言／宣言の根拠が適切だった",c:"【No.18】全身観察結果からL＆Gの適否を判断し、根拠と共に宣言・情報共有できたか。"},
+   {g:"SMR関連",t:"ログロール実施要領／ベルト位置・固定／イモビライザー固定",c:"【種目B-1】ログロールの実施要領、ベルト位置・固定、全身固定が適切だったか。誤判断による中断は「不可」。"},
+   {g:"処置/その他",t:"各種止血法／サムスリング／内旋固定／O₂投与等",c:"【種目B-2】止血・骨盤固定（サムスリング）・四肢固定・酸素投与等を適切に実施したか。"},
+   {g:"車内収容後の指示",t:"酸素切り替え／モニター装着／バイタル測定／保温",c:"【No.25】車内収容直後に酸素のつなぎ変え/モニター装着/必要に応じ保温を行ったか。自主的に行った場合でも隊長への報告があれば「標準」。"},
+   {g:"医療機関選定と連絡",t:"MIST／選定理由／各種指示／助言要請",c:"【No.22/23/種目B-3】病態に応じた医療機関選定（トラウマバイパス適用/例外）。MISTで第一報を要領よく伝達できたか。"},
+   {g:"車内活動",t:"継続観察/詳細観察/重点観察",c:"【No.19/20】継続・詳細・重点観察、容態変化時のABCD再評価が適切にできたか。"}
+  ]
+ },
+ cpa:{
+  name:"心肺停止",
+  proto:[
+   {g:"着手",t:"CPAを認知し迅速に胸骨圧迫と人工呼吸、モニター装着を実施した",c:"【No.13/種目C】CPAを認知し速やかにCPRを開始したか（ABC評価は10秒以内）。モニター装着まで迅速だったか。"},
+   {g:"情報",t:"CPAに陥った原因について必要な情報収集及び観察を実施した",c:"心停止に至った原因（可逆的原因含む）について必要な情報収集・観察を実施したか。"},
+   {g:"時間管理",t:"時間管理が適切であった",c:"現場活動時間・滞在時間（特定行為実施時は延長）を意識した時間管理ができたか。"},
+   {g:"胸骨圧迫の質",t:"胸骨圧迫の深さ、リコイル、リズムが適切であった",c:"【種目C-1】位置・深さ・解除（リコイル）・テンポを評価する。フィードバックデバイス使用時はその結果を用いる。"},
+   {g:"換気の質",t:"用手的気道確保・換気が適切であった",c:"【種目C-3】用手的気道確保と人工呼吸（換気量・回数）が適切だったか。"},
+   {g:"CCF",t:"胸骨圧迫の中断時間は必要最低限であった（CCF ％）",c:"【種目C-2】中断時間（10秒以内）を評価する。移動時を対象とするかは評価者間で調整。"},
+   {g:"除細動/適応判断",t:"初期波形を確認し適切に対応した",c:"【種目C-4】初期波形を確認し適応を判断、包括的指示下除細動を適切に実施したか。救急隊員が除細動ボタンを押下した場合は「不可」（競技規則違反）。"},
+   {g:"指示要請",t:"特定行為の適応と目的を正しく判断して指示要請を行った",c:"【種目D/E/F-1】明確な根拠をもった指示要請内容か。指示要請なしで実施した場合は「不可」（競技規則違反）。"},
+   {g:"病院選定",t:"病院選定が適切であった",c:"【No.22】病態に応じた医療機関を選定したか。"},
+   {g:"特定行為",t:"各種特定行為の手技/効果確認が適切であった",c:"【種目D/E/F-2】高度気道確保・静脈路確保輸液・薬剤投与（アドレナリン等）の手技と効果確認が適切だったか。清潔操作を含む。"},
+   {g:"実施報告",t:"救命士報告の伝達内容が適切であった",c:"【種目各-1】特定行為実施後の報告要領・伝達内容が適切だったか。"}
+  ]
+ },
+ mci:{
+  name:"多数傷病者",
+  proto:[
+   {g:"災害スイッチ",t:"指令内容から災害モードに切り替えられた（宣言）",c:""},
+   {g:"C:指揮統制",t:"適切な指揮命令系統が確立できた",c:""},
+   {g:"C:指揮統制",t:"活動方針を適切に立案できた",c:""},
+   {g:"S:Safety",t:"自分（Self）の安全が確保できた（PPEなど）",c:""},
+   {g:"S:Safety",t:"現場（Scene）の安全が確保できた（危険物の排除など）",c:""},
+   {g:"S:Safety",t:"傷病者（Survivor）の安全が確保できた（安全な場所に移動など）",c:""},
+   {g:"C:Communication",t:"適切な連絡調整ができた（消防、警察、他機関など）",c:""},
+   {g:"C:Communication",t:"災害情報などの伝達ができた（後着隊等）",c:""},
+   {g:"A:Assessment",t:"現場をひと回りして、目視で全体像を把握できた",c:""},
+   {g:"A:Assessment",t:"傷病者の人数を正確に把握できた",c:""}
+  ]
+ },
+ birth:{
+  name:"分娩新生児対応",
+  proto:[
+   {g:"状況評価",t:"出産経験の有無／妊娠週数／既往歴の確認（必要な情報を早期に把握）",c:""},
+   {g:"状況評価",t:"胎児娩出が差し迫っているかの判断（陣痛間隔・胎児の状態を把握）",c:""},
+   {g:"介助",t:"分娩準備（清潔環境・資器材準備）手袋・ガーゼ・タオル等を準備",c:""},
+   {g:"介助",t:"分娩時の体位管理（仰臥位で膝を曲げるなど）",c:""},
+   {g:"介助",t:"陣痛時の声かけと呼吸法の指導（ICを含め不安を軽減）",c:""},
+   {g:"介助",t:"会陰保護（損傷を防ぐ対応）",c:""},
+   {g:"介助",t:"児頭の娩出介助（過度な牽引をせずゆっくり支持）",c:""},
+   {g:"介助",t:"肩甲娩出の介助（前肩・後肩を順序立てて）",c:""},
+   {g:"介助",t:"胎児全身の娩出（回旋を観察し自然な娩出をサポート）",c:""},
+   {g:"介助",t:"娩出時間/場所の確認・記録",c:""},
+   {g:"処置",t:"新生児の生命評価（呼吸・啼泣・筋緊張、アプガースコア）",c:""},
+   {g:"処置",t:"新生児の保温・気道確保（乾燥・保温し必要に応じ吸引）",c:""},
+   {g:"処置",t:"臍帯処置（2か所結紮し適切な長さで安全に切断）",c:""},
+   {g:"処置",t:"胎盤の娩出確認（完全娩出および出血量を観察）",c:""},
+   {g:"処置",t:"母体の観察と出血管理（出血・子宮収縮・母体バイタル）",c:""}
+  ]
+ }
+};
+
+/* シナリオ項目はシナリオ別に内容が変わるため汎用の空欄5項目 */
+const SCENARIO_COUNT = 5;
+const PT_LABELS = [["3","優"],["2","良"],["1","可"],["0","不可"]];
+
+/* ====== 状態 ====== */
+const state = {}; // state[eventKey] = {common:[], proto:[], scenario:[], ng:[]}
+let current = "disease";
+
+function initState(){
+  for(const k in EVENTS){
+    state[k] = {
+      common: Array(COMMON.length).fill(null),
+      proto: Array(EVENTS[k].proto.length).fill(null),
+      scenario: Array(SCENARIO_COUNT).fill(null),
+      ng: Array(NG_ITEMS.length).fill(false),
+      commonMemo: Array(COMMON.length).fill(""),
+      protoMemo: Array(EVENTS[k].proto.length).fill(""),
+      scenarioMemo: Array(SCENARIO_COUNT).fill("")
+    };
+  }
+}
+initState();
+
+/* ====== TCM連携（同一オリジンのlocalStorageを読む） ====== */
+/* TCMのACTIONS順・ラベル（estc_currentのtimeline.keyと対応） */
+const TCM_ACTIONS = [
+  {key:"contact",label:"接触"},{key:"ppe",label:"PPE"},
+  {key:"initial",label:"初期評価"},{key:"backup",label:"応援要請"},
+  {key:"oxygen",label:"酸素投与"},{key:"vital",label:"バイタル測定"},
+  {key:"wholebody",label:"全身観察"},{key:"fixation",label:"固定"},
+  {key:"mist",label:"MIST報告"},{key:"transport",label:"搬送開始"}
+];
+function tcmFmt(ms){ const t=Math.floor(ms/1000); return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0"); }
+/* estc_current を読み、{actions:[{label,ms}], memos:[{ms,text}], totalMs, teamName, caseName} を返す。無ければnull */
+function readTcm(){
+  let raw;
+  try{ raw = localStorage.getItem("estc_current"); }catch(e){ return null; }
+  if(!raw) return null;
+  let st;
+  try{ st = JSON.parse(raw); }catch(e){ return null; }
+  if(!st || !Array.isArray(st.timeline)) return null;
+  // 各処置は最初に押された時刻を採用
+  const firstMs = {};
+  st.timeline.filter(t=>t.type==="action").forEach(t=>{ if(firstMs[t.key]===undefined) firstMs[t.key]=t.ms; });
+  const actions = TCM_ACTIONS
+    .filter(a=> firstMs[a.key]!==undefined)
+    .map(a=> ({label:a.label, ms:firstMs[a.key]}))
+    .sort((x,y)=> x.ms - y.ms);
+  const memos = st.timeline.filter(t=>t.type==="memo").map(t=>({ms:t.ms, text:t.text||""}));
+  const allMs = st.timeline.map(t=>t.ms);
+  const totalMs = allMs.length ? Math.max(...allMs) : 0;
+  return {actions, memos, totalMs, teamName:st.teamName||"", caseName:st.caseName||""};
+}
+
+/* 採点画面の「TCM連携」パネルを描画 */
+function renderTcmPanel(){
+  const box = document.getElementById("tcmLink");
+  if(!box) return;
+  const d = readTcm();
+  if(!d || (d.actions.length===0 && d.memos.length===0)){
+    box.innerHTML = `<div class="tcm-link-head">TCM活動記録</div>
+      <p class="tcm-empty">右のTCMで記録すると、ここに時刻と処置が表示され、PDFにも反映されます。<br>
+      <button class="tcm-reload" onclick="renderTcmPanel()">再読み込み</button></p>`;
+    return;
+  }
+  let rows = d.actions.map(a=>`<div class="tcm-row"><span class="tcm-t">${tcmFmt(a.ms)}</span><span>${a.label}</span></div>`).join("");
+  let memoRows = d.memos.map(m=>`<div class="tcm-row memo"><span class="tcm-t">${tcmFmt(m.ms)}</span><span>${escapeHtmlS(m.text)}</span></div>`).join("");
+  box.innerHTML = `
+    <div class="tcm-link-head">TCM活動記録
+      <button class="tcm-reload" onclick="renderTcmPanel()">再読み込み</button>
+    </div>
+    <div class="tcm-meta">${escapeHtmlS(d.teamName)} ${d.caseName?("／ "+escapeHtmlS(d.caseName)):""}　総活動 ${tcmFmt(d.totalMs)}</div>
+    <div class="tcm-rows">${rows}${memoRows?`<div class="tcm-sub">メモ</div>${memoRows}`:""}</div>`;
+}
+function escapeHtmlS(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+
+/* ====== タブ描画 ====== */
+const tabsEl = document.getElementById("tabs");
+function renderTabs(){
+  tabsEl.innerHTML = "";
+  for(const k in EVENTS){
+    const b = document.createElement("button");
+    b.className = "tab" + (k===current?" active":"");
+    b.textContent = EVENTS[k].name;
+    b.onclick = ()=>{ current=k; renderTabs(); renderContent(); window.scrollTo(0,0); };
+    tabsEl.appendChild(b);
+  }
+}
+
+/* ====== 本体描画 ====== */
+const contentEl = document.getElementById("content");
+
+function scoreBtns(arr, idx){
+  const wrap = document.createElement("div");
+  wrap.className = "scorebtns";
+  PT_LABELS.forEach(([pt,lb])=>{
+    const b = document.createElement("div");
+    const val = parseInt(pt);
+    b.className = "sb" + (arr[idx]===val ? " sel-"+pt : "");
+    b.innerHTML = `<span class="sb-pt">${pt}</span><span class="sb-lb">${lb}</span>`;
+    b.onclick = ()=>{
+      arr[idx] = (arr[idx]===val) ? null : val;
+      renderContent(); updateScores();
+    };
+    wrap.appendChild(b);
+  });
+  return wrap;
+}
+
+function makeItem(arr, idx, txt, num, grp, big, criteria, memoArr){
+  const d = document.createElement("div");
+  d.className = "item" + (big?" big":"");
+  const top = document.createElement("div");
+  top.className = "item-top";
+  top.innerHTML = `<span class="item-num">${num}</span>`;
+  if(grp){ top.innerHTML += `<span class="item-grp">${grp}</span>`; }
+  const t = document.createElement("span");
+  t.className = "item-txt"; t.textContent = txt;
+  top.appendChild(t);
+  // 判定基準ボタン
+  const info = document.createElement("button");
+  info.className = "info-btn" + (criteria ? "" : " unset");
+  info.textContent = "ℹ";
+  info.onclick = (e)=>{ e.stopPropagation(); openCriteria(txt, criteria); };
+  top.appendChild(info);
+  d.appendChild(top);
+  d.appendChild(scoreBtns(arr, idx));
+  // メモ欄
+  if(memoArr){
+    const memo = document.createElement("input");
+    memo.className = "item-memo";
+    memo.type = "text";
+    memo.placeholder = "メモ（フィードバック用）";
+    memo.value = memoArr[idx] || "";
+    memo.oninput = (e)=>{ memoArr[idx] = e.target.value; };
+    d.appendChild(memo);
+  }
+  return d;
+}
+
+function sectionHead(no, title, sub){
+  const h = document.createElement("div");
+  h.className = "sec-head";
+  h.innerHTML = `<span class="sec-no">${no}</span><span class="sec-title">${title}</span><span class="sec-sub">${sub}</span>`;
+  return h;
+}
+
+function renderContent(){
+  const ev = EVENTS[current];
+  document.getElementById("eventTitle").textContent = ev.name + " 採点表";
+  contentEl.innerHTML = "";
+  const s = state[current];
+
+  // ① 共通項目
+  const sec1 = document.createElement("div"); sec1.className="section";
+  sec1.appendChild(sectionHead("①","共通項目","各3点 / 45点満点"));
+  COMMON.forEach((it,i)=> sec1.appendChild(makeItem(s.common, i, it.t, i+1, null, false, it.c, s.commonMemo)));
+  contentEl.appendChild(sec1);
+
+  // ② プロトコル
+  const max2 = ev.proto.length*3;
+  const sec2 = document.createElement("div"); sec2.className="section";
+  sec2.appendChild(sectionHead("②","プロトコル", `各3点 / ${max2}点満点`));
+  ev.proto.forEach((p,i)=> sec2.appendChild(makeItem(s.proto, i, p.t, i+1, p.g, true, p.c, s.protoMemo)));
+  contentEl.appendChild(sec2);
+
+  // ③ シナリオ
+  const sec3 = document.createElement("div"); sec3.className="section";
+  sec3.appendChild(sectionHead("③","シナリオ別評価","各3点 / 15点満点"));
+  const note = document.createElement("div");
+  note.className="empty-note";
+  note.textContent="※シナリオ固有の評価項目（内容は当日配布の評価表に従う）";
+  sec3.appendChild(note);
+  for(let i=0;i<SCENARIO_COUNT;i++){
+    sec3.appendChild(makeItem(s.scenario, i, "シナリオ評価項目 "+(i+1), i+1, null, false, "", s.scenarioMemo));
+  }
+  contentEl.appendChild(sec3);
+
+  // NG
+  const secng = document.createElement("div"); secng.className="section ng";
+  secng.appendChild(sectionHead("NG","NG項目（減点）","1項目につき −5点"));
+  NG_ITEMS.forEach((txt,i)=>{
+    const r = document.createElement("div");
+    r.className = "ng-row" + (s.ng[i]?" on":"");
+    r.innerHTML = `<span class="ng-check">${s.ng[i]?"✓":""}</span><span class="ng-txt">${txt}</span>`;
+    r.onclick = ()=>{ s.ng[i]=!s.ng[i]; renderContent(); updateScores(); };
+    secng.appendChild(r);
+  });
+  contentEl.appendChild(secng);
+
+  updateScores();
+}
+
+/* ====== 集計 ====== */
+function sumArr(a){ return a.reduce((x,v)=> x + (v||0), 0); }
+
+function updateScores(){
+  const s = state[current];
+  const c1 = sumArr(s.common);
+  const c2 = sumArr(s.proto);
+  const c3 = sumArr(s.scenario);
+  const ngCount = s.ng.filter(Boolean).length;
+  const ngPts = ngCount * -5;
+  const total = c1 + c2 + c3 + ngPts;
+
+  const max2 = EVENTS[current].proto.length*3;
+  const maxTotal = 45 + max2 + 15;
+
+  document.getElementById("sc1").textContent = c1;
+  document.getElementById("sc2").textContent = c2;
+  document.getElementById("sc3").textContent = c3;
+  document.getElementById("scng").textContent = ngPts;
+  document.getElementById("scTotal").textContent = total;
+
+  document.getElementById("footTotal").textContent = total;
+  document.getElementById("footMax").textContent = maxTotal;
+  document.getElementById("footSub").textContent =
+    `①${c1}/45　②${c2}/${max2}　③${c3}/15　NG${ngPts}`;
+}
+
+/* ====== 集計テキスト ====== */
+function buildSummary(){
+  const s = state[current];
+  const ev = EVENTS[current];
+  const c1 = sumArr(s.common), c2 = sumArr(s.proto), c3 = sumArr(s.scenario);
+  const ngCount = s.ng.filter(Boolean).length;
+  const ngPts = ngCount*-5;
+  const total = c1+c2+c3+ngPts;
+  const max2 = ev.proto.length*3;
+
+  const L = [];
+  L.push(`【学生救急救命技術選手権 ${ev.name}】`);
+  L.push(`学校:${val("m_school")}　チーム:${val("m_team")}`);
+  L.push(`ST No.:${val("m_st")}　評価者:${val("m_judge")}`);
+  L.push(`────────────`);
+  L.push(`①共通項目　${c1} / 45`);
+  L.push(`②プロトコル ${c2} / ${max2}`);
+  L.push(`③シナリオ　${c3} / 15`);
+  L.push(`NG減点　　 ${ngPts}（${ngCount}項目）`);
+  if(ngCount>0){
+    s.ng.forEach((v,i)=>{ if(v) L.push(`  ・${NG_ITEMS[i]}`); });
+  }
+  L.push(`────────────`);
+  L.push(`総計　${total} / ${45+max2+15}`);
+  return L.join("\n");
+}
+function val(id){ return document.getElementById(id).value.trim() || "―"; }
+
+/* ====== 判定基準モーダル ====== */
+const modalBg = document.getElementById("modalBg");
+function openCriteria(title, criteria){
+  document.getElementById("modalTitle").textContent = title;
+  const cEl = document.getElementById("modalCriteria");
+  if(criteria && criteria.trim()){
+    cEl.textContent = criteria;
+    cEl.classList.remove("unset");
+  }else{
+    cEl.textContent = "この項目の個別基準は未設定です（上記の4段階基準で判定してください）。";
+    cEl.classList.add("unset");
+  }
+  modalBg.classList.add("show");
+}
+document.getElementById("modalClose").onclick = ()=> modalBg.classList.remove("show");
+modalBg.onclick = (e)=>{ if(e.target===modalBg) modalBg.classList.remove("show"); };
+
+/* ====== フッタ操作 ====== */
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove("show"), 1800);
+}
+
+document.getElementById("btnShare").onclick = async ()=>{
+  const txt = buildSummary();
+  if(navigator.share){
+    try{ await navigator.share({text:txt}); return; }catch(e){}
+  }
+  try{
+    await navigator.clipboard.writeText(txt);
+    toast("集計をコピーしました");
+  }catch(e){
+    alert(txt);
+  }
+};
+
+/* ====== PDF出力 ====== */
+const GRADE_LABEL = {3:"優",2:"良",1:"可",0:"不可"};
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function nowStamp(){
+  const d = new Date();
+  const w = ["日","月","火","水","木","金","土"][d.getDay()];
+  const p = n=> String(n).padStart(2,"0");
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日(${w}) ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function rowsHtml(items, scoreArr, memoArr, getText){
+  let h = "";
+  items.forEach((it,i)=>{
+    const v = scoreArr[i];
+    const grade = (v===null||v===undefined) ? "—" : `${GRADE_LABEL[v]}(${v})`;
+    h += `<tr>
+      <td class="c-no">${i+1}</td>
+      <td class="c-txt">${esc(getText(it))}</td>
+      <td class="c-grade">${grade}</td>
+      <td class="c-memo">${esc(memoArr[i])}</td>
+    </tr>`;
+  });
+  return h;
+}
+
+function buildPdfHtml(){
+  const s = state[current];
+  const ev = EVENTS[current];
+  const c1 = sumArr(s.common), c2 = sumArr(s.proto), c3 = sumArr(s.scenario);
+  const ngCount = s.ng.filter(Boolean).length;
+  const ngPts = ngCount*-5;
+  const total = c1+c2+c3+ngPts;
+  const max2 = ev.proto.length*3;
+  const maxTotal = 45+max2+15;
+
+  let ngList = "";
+  s.ng.forEach((v,i)=>{ if(v) ngList += `<li>${esc(NG_ITEMS[i])}</li>`; });
+
+  const scenarioItems = Array.from({length:SCENARIO_COUNT},(_,i)=>"シナリオ評価項目 "+(i+1));
+
+  // TCM活動記録
+  const tcm = readTcm();
+  let tcmBlock = "";
+  if(tcm && (tcm.actions.length || tcm.memos.length)){
+    let aRows = tcm.actions.map(a=>`<tr><td class="t-time">${tcmFmt(a.ms)}</td><td>${esc(a.label)}</td></tr>`).join("");
+    let mRows = tcm.memos.map(m=>`<tr><td class="t-time">${tcmFmt(m.ms)}</td><td>${esc(m.text)}</td></tr>`).join("");
+    tcmBlock = `<h2>活動タイムライン（TCM記録）</h2>
+      <div class="tcm-pdf-meta">${esc(tcm.teamName)}${tcm.caseName?(" ／ "+esc(tcm.caseName)):""}　総活動時間 ${tcmFmt(tcm.totalMs)}</div>
+      <table class="score tcm-pdf"><tr><th style="width:60px;">時刻</th><th>実施した処置</th></tr>${aRows}</table>
+      ${mRows?`<table class="score tcm-pdf" style="margin-top:6px;"><tr><th style="width:60px;">時刻</th><th>メモ（自由記録）</th></tr>${mRows}</table>`:""}`;
+  }
+
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>${esc(ev.name)}採点表_${esc(val("m_team"))}</title>
+<style>
+  @page{ size:A4; margin:14mm 12mm; }
+  *{box-sizing:border-box;}
+  body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#1a1d24;font-size:10px;line-height:1.4;margin:0;}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1d24;padding-bottom:6px;margin-bottom:8px;}
+  .doc-mark{font-size:9px;letter-spacing:.15em;color:#b03a2e;font-weight:700;}
+  h1{font-size:15px;margin:2px 0;}
+  .doc-date{font-size:9px;color:#666;text-align:right;}
+  .meta-tbl{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;}
+  .meta-tbl td{border:1px solid #d8d2c4;padding:4px 6px;}
+  .meta-tbl .k{background:#f2efe8;font-weight:700;width:60px;white-space:nowrap;}
+  .total-box{display:flex;gap:6px;margin-bottom:10px;}
+  .tb-cell{flex:1;border:1px solid #d8d2c4;border-radius:4px;text-align:center;padding:5px 2px;}
+  .tb-cell .l{font-size:8px;color:#777;}
+  .tb-cell .v{font-size:14px;font-weight:800;}
+  .tb-cell.tot{background:#b03a2e;color:#fff;border-color:#b03a2e;}
+  .tb-cell.tot .l{color:#ffd;}
+  h2{font-size:11px;background:#1a1d24;color:#f7f5f0;padding:3px 8px;margin:10px 0 4px;border-radius:3px;}
+  table.score{width:100%;border-collapse:collapse;}
+  table.score th{background:#f2efe8;border:1px solid #d8d2c4;padding:3px 4px;font-size:9px;}
+  table.score td{border:1px solid #d8d2c4;padding:3px 5px;vertical-align:top;}
+  .c-no{width:22px;text-align:center;color:#888;}
+  .c-grade{width:46px;text-align:center;font-weight:700;}
+  .c-memo{width:32%;color:#555;}
+  .ng-box{margin-top:10px;border:1px solid #b03a2e;border-radius:4px;padding:6px 10px;}
+  .ng-box h3{color:#b03a2e;font-size:10px;margin:0 0 4px;}
+  .ng-box ul{margin:0;padding-left:16px;}
+  .sign{margin-top:16px;display:flex;gap:30px;font-size:10px;}
+  .sign div{border-top:1px solid #1a1d24;padding-top:3px;flex:1;}
+  .tcm-pdf-meta{font-size:9px;color:#555;margin:0 0 4px;}
+  .tcm-pdf .t-time{text-align:center;font-weight:700;color:#246b43;font-variant-numeric:tabular-nums;}
+  @media print{ .noprint{display:none;} }
+  .noprint{position:fixed;top:8px;right:8px;}
+  .noprint button{padding:8px 16px;font-size:13px;background:#b03a2e;color:#fff;border:none;border-radius:6px;cursor:pointer;}
+</style></head><body>
+<div class="noprint"><button onclick="window.print()">PDFとして保存 / 印刷</button></div>
+<div class="doc-head">
+  <div>
+    <div class="doc-mark">JESA 学生救急救命技術選手権</div>
+    <h1>${esc(ev.name)} 評価表</h1>
+  </div>
+  <div class="doc-date">評価日時<br>${nowStamp()}</div>
+</div>
+<table class="meta-tbl">
+  <tr><td class="k">学校名</td><td>${esc(val("m_school"))}</td><td class="k">チーム名</td><td>${esc(val("m_team"))}</td></tr>
+  <tr><td class="k">ST No.</td><td>${esc(val("m_st"))}</td><td class="k">評価者</td><td>${esc(val("m_judge"))}</td></tr>
+</table>
+<div class="total-box">
+  <div class="tb-cell"><div class="l">①共通</div><div class="v">${c1}<small>/45</small></div></div>
+  <div class="tb-cell"><div class="l">②プロトコル</div><div class="v">${c2}<small>/${max2}</small></div></div>
+  <div class="tb-cell"><div class="l">③シナリオ</div><div class="v">${c3}<small>/15</small></div></div>
+  <div class="tb-cell"><div class="l">NG減点</div><div class="v">${ngPts}</div></div>
+  <div class="tb-cell tot"><div class="l">総計</div><div class="v">${total}<small>/${maxTotal}</small></div></div>
+</div>
+<h2>① 共通項目</h2>
+<table class="score"><tr><th>No</th><th>評価項目</th><th>評価</th><th>メモ</th></tr>
+${rowsHtml(COMMON, s.common, s.commonMemo, it=>it.t)}</table>
+<h2>② プロトコル</h2>
+<table class="score"><tr><th>No</th><th>評価項目</th><th>評価</th><th>メモ</th></tr>
+${rowsHtml(ev.proto, s.proto, s.protoMemo, it=>it.g+"："+it.t)}</table>
+<h2>③ シナリオ別評価</h2>
+<table class="score"><tr><th>No</th><th>評価項目</th><th>評価</th><th>メモ</th></tr>
+${rowsHtml(scenarioItems, s.scenario, s.scenarioMemo, it=>it)}</table>
+${ngCount>0 ? `<div class="ng-box"><h3>NG項目（各 −5点 / 計 ${ngPts}点）</h3><ul>${ngList}</ul></div>` : ""}
+${tcmBlock}
+<div class="sign"><div>評価者署名（1）</div><div>評価者署名（2）</div></div>
+</body></html>`;
+}
+
+document.getElementById("btnPdf").onclick = ()=>{
+  const w = window.open("", "_blank");
+  if(!w){ toast("ポップアップを許可してください"); return; }
+  w.document.write(buildPdfHtml());
+  w.document.close();
+};
+
+document.getElementById("btnReset").onclick = ()=>{
+  if(!confirm(`「${EVENTS[current].name}」の採点をリセットしますか？`)) return;
+  const k = current;
+  state[k] = {
+    common: Array(COMMON.length).fill(null),
+    proto: Array(EVENTS[k].proto.length).fill(null),
+    scenario: Array(SCENARIO_COUNT).fill(null),
+    ng: Array(NG_ITEMS.length).fill(false),
+    commonMemo: Array(COMMON.length).fill(""),
+    protoMemo: Array(EVENTS[k].proto.length).fill(""),
+    scenarioMemo: Array(SCENARIO_COUNT).fill("")
+  };
+  renderContent();
+  toast("リセットしました");
+};
+
+/* ====== 起動 ====== */
+renderTabs();
+renderContent();
+renderTcmPanel();
+
+/* TCM iframe の中身の高さに合わせてiframeを伸ばす（同一オリジンなので可能）
+   → 右ペインの .tcm-scroll でスクロールできるようになる */
+function fitTcmIframe(){
+  const f = document.querySelector(".pane-tcm iframe");
+  if(!f) return;
+  try{
+    const doc = f.contentDocument || f.contentWindow.document;
+    if(doc && doc.body){
+      const h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight, 1200);
+      f.style.height = h + "px";
+    }
+  }catch(e){ /* 別オリジン等で読めない場合は何もしない */ }
+}
+(function(){
+  const f = document.querySelector(".pane-tcm iframe");
+  if(f){
+    f.addEventListener("load", ()=>{ fitTcmIframe(); setTimeout(fitTcmIframe, 600); });
+  }
+  // TCMは操作で高さが変わる（記録追加など）ので定期的に測り直す
+  setInterval(fitTcmIframe, 2000);
+  window.addEventListener("resize", fitTcmIframe);
+})();
+
+/* TCM記録が裏で更新されるので、画面に戻った時と定期的に読み直す */
+window.addEventListener("focus", renderTcmPanel);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) renderTcmPanel(); });
+setInterval(renderTcmPanel, 5000);
+
+</script>
+</body>
+</html>
